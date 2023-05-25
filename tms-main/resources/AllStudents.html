@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Transport Management System</title>
+	<link rel="stylesheet" href="AllStudents.css">
+</head>
+
+<body>
+	<div id="mySidenav" class="sidenav">
+		<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+		<a href="adminInfo.html" class="navText">My Info</a>
+		<a href="AllStudents.html" class="navText">All Students</a>
+		<a href="ChangePassword.html" class="navText">Change Password</a>
+		<a href="#" class="navText" onclick="logout()">Log Out</a>
+
+	</div>
+
+	<div class="top">
+		<div class="image header">
+			<img src="GIS Logo.png" alt="" onclick="openNav()" height="143px" width="140px" />
+		</div>
+		<div class="header welcomeText">
+			<div class="adminHeading">
+				<h2>Welcome, Admin!</h2>
+			</div>
+			<input type="text" placeholder="Search Here" width="100%" class="search" id="searchBox" oninput="searchStudents()" />
+		</div>
+	</div>
+
+	<h3>All Students information</h3>
+
+	<table>
+		<thead>
+			<tr>
+				<th>Adm. Number</th>
+				<th>Name</th>
+				<th>Contact</th>
+				<th>Class</th>
+				<th>Bus Number</th>
+				<th>Fees Paid</th>
+				<th>Fees Due</th>
+				<th>Due Date</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody id="studentList">
+			<!-- Data will be populated here -->
+		</tbody>
+	</table>
+	<a href="AddStudent.html" class="add-student"><img src="add Student icon.png" alt="Add Student" height="70px"
+			width="70px"></a>
+
+	<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+
+	<script>
+		const firebaseConfig = {
+			apiKey: "AIzaSyCI_ltvBudhv4wL-l_SWEzii_TJEvYYZRs",
+				authDomain: "gyankalash-ffe95.firebaseapp.com",
+				databaseURL: "https://gyankalash-ffe95-default-rtdb.firebaseio.com",
+				projectId: "gyankalash-ffe95",
+				storageBucket: "gyankalash-ffe95.appspot.com",
+				messagingSenderId: "235768097080",
+				appId: "1:235768097080:web:d55eaeb403dba0c83db9cd",
+				measurementId: "G-4JDHWQ0H70"
+		};
+
+		firebase.initializeApp(firebaseConfig);
+
+		// Get a reference to the database
+		const database = firebase.database();
+
+		// Function to retrieve data from the database and display it in the HTML table
+		const displayStudentList = () => {
+			const studentList = document.getElementById("studentList");
+			studentList.innerHTML = '';
+
+			const studentRef = database.ref('students');
+			studentRef.orderByChild('admissionNumber').once('value') // Order the data by admissionNumber
+				.then((snapshot) => {
+					snapshot.forEach((childSnapshot) => {
+						const childData = childSnapshot.val();
+						const tr = document.createElement("tr");
+
+						const admNo = document.createElement("td");
+						admNo.innerHTML = childData.admissionNumber;
+
+						tr.appendChild(admNo);
+
+						const name = document.createElement("td");
+						name.innerHTML = childData.name;
+						tr.appendChild(name);
+
+						const contact = document.createElement("td");
+						contact.innerHTML = childData.phone;
+						tr.appendChild(contact);
+
+						const classNum = document.createElement("td");
+						classNum.innerHTML = childData.studentClass;
+						tr.appendChild(classNum);
+
+						const busNo = document.createElement("td");
+						busNo.innerHTML = childData.busNumber;
+						tr.appendChild(busNo);
+
+						const feesPaid = document.createElement("td");
+						feesPaid.innerHTML = childData.feesPaid;
+						tr.appendChild(feesPaid);
+
+						const feesDue = document.createElement("td");
+						feesDue.innerHTML = childData.feesDue;
+						tr.appendChild(feesDue);
+
+						const dueDate = document.createElement("td");
+						dueDate.innerHTML = childData.dueDate;
+						tr.appendChild(dueDate);
+
+						const actions = document.createElement("td");
+						const openEditWindow = (studentId) => {
+							// Redirect to the EditStudent.html page with the student ID as a query parameter
+							window.location.href = `EditStudent.html?id=${studentId}`;
+						};
+						// Edit icon
+						const editIcon = document.createElement("img");
+						editIcon.src = "edit_icon.png";
+						editIcon.alt = "Edit";
+						editIcon.classList.add("action-icon");
+						editIcon.style.width = "50px"; // Set width to 50 pixels
+						editIcon.style.height = "50px"; // Set height to 50 pixels
+						editIcon.addEventListener("click", () => {
+							const studentId = childSnapshot.key;
+							openEditWindow(studentId);
+						});
+						actions.appendChild(editIcon);
+
+						// Delete icon
+						const deleteIcon = document.createElement("img");
+						deleteIcon.src = "delete_icon.png";
+						deleteIcon.alt = "Delete";
+						deleteIcon.classList.add("action-icon");
+						deleteIcon.style.width = "50px"; // Set width to 50 pixels
+						deleteIcon.style.height = "50px"; // Set height to 50 pixels
+						deleteIcon.addEventListener("click", () => {
+							const confirmation = confirm("Do you really want to delete this student?");
+							if (confirmation) {
+								// Delete the student from the database
+								const studentId = childSnapshot.key;
+								database.ref(`students/${studentId}`).remove()
+									.then(() => {
+										// Delete the student from the webpage
+										tr.remove();
+										alert("Student deleted successfully.");
+									})
+									.catch((error) => {
+										console.error("Error deleting student:", error);
+									});
+							}
+						});
+						actions.appendChild(deleteIcon);
+
+						tr.appendChild(actions);
+						studentList.appendChild(tr);
+					});
+				})
+				.catch((error) => {
+					console.error("Error fetching student data:", error);
+				});
+		};
+
+		displayStudentList();
+
+		function logout() {
+			firebase.auth().signOut()
+			  .then(function () {
+				// Sign out successful
+				alert("Logged out successfully!");
+				// Redirect to the login page or desired location
+				window.location.href = "login.html";
+			  })
+			  .catch(function (error) {
+				// Handle logout error
+				alert("Error logging out: " + error.message);
+			  });
+		  }
+
+		// Function to search for students based on admission number
+		const searchStudents = () => {
+			const searchBox = document.getElementById("searchBox");
+			const searchText = searchBox.value.trim().toLowerCase();
+
+			const studentList = document.getElementById("studentList");
+			studentList.innerHTML = '';
+
+			const studentRef = database.ref('students');
+			studentRef.orderByChild('admissionNumber').startAt(searchText).endAt(searchText + "\uf8ff").once('value') // Order the data by admissionNumber and perform search
+				.then((snapshot) => {
+					snapshot.forEach((childSnapshot) => {
+						const childData = childSnapshot.val();
+						const tr = document.createElement("tr");
+
+						const admNo = document.createElement("td");
+						admNo.innerHTML = `<a href="StudentInfo.html">${childData.admissionNumber}</a>`;
+						tr.appendChild(admNo);
+
+						const name = document.createElement("td");
+						name.innerHTML = childData.name;
+						tr.appendChild(name);
+
+						const contact = document.createElement("td");
+						contact.innerHTML = childData.phone;
+						tr.appendChild(contact);
+
+						const classNum = document.createElement("td");
+						classNum.innerHTML = childData.studentClass;
+						tr.appendChild(classNum);
+
+						const busNo = document.createElement("td");
+						busNo.innerHTML = childData.busNumber;
+						tr.appendChild(busNo);
+
+						const feesPaid = document.createElement("td");
+						feesPaid.innerHTML = childData.feesPaid;
+						tr.appendChild(feesPaid);
+
+						const feesDue = document.createElement("td");
+						feesDue.innerHTML = childData.feesDue;
+						tr.appendChild(feesDue);
+
+						const dueDate = document.createElement("td");
+						dueDate.innerHTML = childData.dueDate;
+						tr.appendChild(dueDate);
+
+						const actions = document.createElement("td");
+						const openEditWindow = (studentId) => {
+							// Redirect to the EditStudent.html page with the student ID as a query parameter
+							window.location.href = `EditStudent.html?id=${studentId}`;
+						};
+						// Edit icon
+						
+						const editIcon = document.createElement("img");
+						editIcon.src = "edit_icon.png";
+						editIcon.alt = "Edit";
+						editIcon.classList.add("action-icon");
+						editIcon.style.width = "50px"; // Set width to 50 pixels
+						editIcon.style.height = "50px"; // Set height to 50 pixels
+						editIcon.addEventListener("click", () => {
+							const studentId = childSnapshot.key;
+							openEditWindow(studentId);
+						});
+						actions.appendChild(editIcon);
+						
+  
+						// Delete icon
+						const deleteIcon = document.createElement("img");
+						deleteIcon.src = "delete_icon.png";
+						deleteIcon.alt = "Delete";
+						deleteIcon.classList.add("action-icon");
+						deleteIcon.style.width = "50px"; // Set width to 50 pixels
+						deleteIcon.style.height = "50px"; // Set height to 50 pixels
+						deleteIcon.addEventListener("click", () => {
+							const confirmation = confirm("Do you really want to delete this student?");
+							if (confirmation) {
+								// Delete the student from the database
+								const studentId = childSnapshot.key;
+								database.ref(`students/${studentId}`).remove()
+									.then(() => {
+										// Delete the student from the webpage
+										tr.remove();
+										alert("Student deleted successfully.");
+									})
+									.catch((error) => {
+										console.error("Error deleting student:", error);
+									});
+							}
+						});
+						actions.appendChild(deleteIcon);
+
+						tr.appendChild(actions);
+						studentList.appendChild(tr);
+					});
+				})
+				.catch((error) => {
+					console.error("Error searching for students:", error);
+				});
+		};
+
+	</script>
+	<script>
+		function openNav() {
+			document.getElementById("mySidenav").style.width = "250px";
+		}
+
+		function closeNav() {
+			document.getElementById("mySidenav").style.width = "0";
+		}
+	</script>
+
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Transport Management System</title>
+	<link rel="stylesheet" href="AddStudent.css">
+</head>
+
+<body>
+	<div id="mySidenav" class="sidenav">
+		<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+		<a href="adminInfo.html" class="navText">My Info</a>
+		<a href="AllStudents.html" class="navText">All Students</a>
+		<a href="ChangePassword.html" class="navText">Change Password</a>
+		<a href="#" class="navText" onclick="logout()">Log Out</a>
+
+	</div>
+	<div class="top">
+		<div class="image header">
+			<img src="GIS Logo.png" alt="" onclick="openNav()" height="143px" width="140px" />
+		</div>
+		<div class="header welcomeText">
+			<div class="adminHeading">
+				<h2>Welcome , Admin !</h2>
+			</div>
+			<input type="text" placeholder="Search Here" width="100%" class="search" />
+		</div>
+	</div>
+	<h3>Add Student</h3>
+	<div class="addST">
+		<form method="POST" action="submit-form.php" enctype="multipart/form-data">
+			<div class="form-container">
+				<div class="left">
+					<label for="name">Name<span class="required"></span></label>
+					<input type="text" id="name" name="name" required>
+
+					<label for="dob">Date of Birth<span class="required"></span></label>
+					<input type="date" id="dob" name="dob" required>
+
+					<label for="gender">Gender<span class="required"></span></label>
+					<select id="gender" name="gender" required>
+						<option value="">Select Gender</option>
+						<option value="male">Male</option>
+						<option value="female">Female</option>
+						<option value="other">Other</option>
+					</select>
+
+					<label for="father_name">Father's Name<span class="required"></span></label>
+					<input type="text" id="father_name" name="father_name" required>
+
+					<label for="mother_name">Mother's Name<span class="required"></span></label>
+					<input type="text" id="mother_name" name="mother_name" required>
+
+					<label for="phone">Phone Number<span class="required"></span></label>
+					<input type="tel" id="phone" name="phone" required>
+					<label for="admission_number">Admission Number<span class="required"></span></label>
+					<input type="text" id="admission_number" name="admission_number" required>
+				</div>
+
+				<div class="right">
+					
+
+					<label for="class">Class<span class="required"></span></label>
+					<input type="text" id="class" name="class" required>
+
+					<label for="bus_number">Bus Number<span class="required"></span></label>
+					<input type="text" id="bus_number" name="			bus_number" required>
+
+					<label for="bus_route">Bus Route<span class="required"></span></label>
+					<input type="text" id="bus_route" name="bus_route" required>
+					<label for="fees_paid">Fess Paid<span class="required"></span></label>
+					<input type="text" id="fees_paid" name="fees_paid" required>
+					<label for="fees_due">Fees Due<span class="required"></span></label>
+					<input type="text" id="fees_due" name="fees_due" required>
+					<label for="due_date">Due date<span class="required"></span></label>
+					<input type="date" id="due_date" name="due_date" required>
+
+					<label for="photo">Upload Photo</label>
+					<input type="file" id="photo" name="photo">
+
+
+				</div>
+
+			</div>
+			<button type="submit" class="submit">Submit</button>
+		</form>
+		<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-app.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/8.4.1/firebase-auth.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-database.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+
+		<script>
+			const firebaseConfig = {
+				apiKey: "AIzaSyCI_ltvBudhv4wL-l_SWEzii_TJEvYYZRs",
+				authDomain: "gyankalash-ffe95.firebaseapp.com",
+				databaseURL: "https://gyankalash-ffe95-default-rtdb.firebaseio.com",
+				projectId: "gyankalash-ffe95",
+				storageBucket: "gyankalash-ffe95.appspot.com",
+				messagingSenderId: "235768097080",
+				appId: "1:235768097080:web:d55eaeb403dba0c83db9cd",
+				measurementId: "G-4JDHWQ0H70"
+			};
+
+			firebase.initializeApp(firebaseConfig);
+
+			// Get a reference to the database
+			const database = firebase.database();
+
+			// Handle form submission
+			function addStudent(event) {
+				event.preventDefault(); // Prevent the form from submitting normally
+
+				// Get input values from form
+				const name = document.getElementById('name').value;
+				const dob = document.getElementById('dob').value;
+				const gender = document.getElementById('gender').value;
+				const fatherName = document.getElementById('father_name').value;
+				const motherName = document.getElementById('mother_name').value;
+				const phone = document.getElementById('phone').value;
+				const admissionNumber = document.getElementById('admission_number').value;
+				const studentClass = document.getElementById('class').value;
+				const busNumber = document.getElementById('bus_number').value;
+				const busRoute = document.getElementById('bus_route').value;
+				const feesPaid = document.getElementById('fees_paid').value;
+                const feesDue = document.getElementById('fees_due').value;
+				const dueDate= document.getElementById('due_date').value;
+
+
+				const photo = document.getElementById('photo').value; // This value will be the file path on the user's computer, not the actual file data
+
+				// Create new student object
+				const student = {
+					name,
+					dob,
+					gender,
+					fatherName,
+					motherName,
+					phone,
+					admissionNumber,
+					studentClass,
+					busNumber,
+					busRoute,
+					feesPaid,
+					feesDue,
+					dueDate,
+					photo
+				};
+
+				// Add student to database
+				database.ref('students').push(student)
+					.then(() => {
+						// Display success message to user
+						alert('Student added successfully');
+						// Reset the form
+						event.target.reset();
+					})
+					.catch(error => {
+						console.error(error);
+						alert('Error adding student');
+					});
+			}
+
+			// Add event listener to form
+			const form = document.querySelector('form');
+			form.addEventListener('submit', addStudent);
+
+		</script>
+	</div>
+</body>
+<script>
+	function openNav() {
+		document.getElementById("mySidenav").style.width = "250px";
+	}
+	function closeNav() {
+		document.getElementById("mySidenav").style.width = "0";
+	}
+	function logout() {
+		firebase.auth().signOut()
+		  .then(function () {
+			// Sign out successful
+			alert("Logged out successfully!");
+			// Redirect to the login page or desired location
+			window.location.href = "login.html";
+		  })
+		  .catch(function (error) {
+			// Handle logout error
+			alert("Error logging out: " + error.message);
+		  });
+	  }
+</script>
+
+</html>
